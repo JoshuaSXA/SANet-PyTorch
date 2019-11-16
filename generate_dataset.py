@@ -65,12 +65,16 @@ def get_density_map_gaussian(im, points, adaptive_mode=False, fixed_value=15, fi
     density_map = density_map / (np.sum(density_map / num_gt))
     return density_map
 
-
+def img_cv2np(img, bgr2rgb=False):
+    img_arr = np.ascontiguousarray(img).astype(np.float32)
+    if bgr2rgb:
+        img_arr = img_arr.transpose(2, 0, 1)
+    img_arr /= 255
+    return img_arr
 
 def get_data_from_file(img_path, gt_path):
     img = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
     k = np.zeros((img.shape[0], img.shape[1]))
-    print(img.shape)
     gt_dots = []
     f = open(gt_path)
     line = f.readline()
@@ -79,27 +83,7 @@ def get_data_from_file(img_path, gt_path):
         gt_dots.append([int(xy[0]), int(xy[1])])
         k[int(xy[1])][int(xy[0])] = 1
         line = f.readline()
-    gt_dots = np.array(gt_dots)
-    return img, get_density_map_gaussian(k, gt_dots, adaptive_mode=True)
-
-
-
-img_paths = sorted(glob(os.path.join('StoneData', 'images', '*.png')))
-txt_paths = sorted(glob(os.path.join('StoneData', 'ground_truth', '*.txt')))
-
-
-for (img_path, txt_path) in zip(img_paths, txt_paths):
-
-    if not '9.png' in img_path:
-        continue
-
-    img_ori, k = get_data_from_file(img_path, txt_path)
-
-    fg, (ax0, ax1) = plt.subplots(1, 2, figsize=(20, 4))
-    ax0.imshow(img_ori)
-    ax0.set_title("Original Image")
-    ax1.imshow(np.squeeze(k), cmap=plt.cm.jet)
-
-    ax1.set_title("Density Map (Count:%d)" % int(np.sum(k)))
-    plt.show()
-    break
+    gt_dots = np.asarray(gt_dots)
+    k = get_density_map_gaussian(k, gt_dots, adaptive_mode=True)
+    k = k[:, :, np.newaxis]
+    return img_cv2np(img), k.astype(np.float32)
