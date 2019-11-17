@@ -65,10 +65,8 @@ def get_density_map_gaussian(im, points, adaptive_mode=False, fixed_value=15, fi
     density_map = density_map / (np.sum(density_map / num_gt))
     return density_map
 
-def img_cv2np(img, bgr2rgb=False):
+def img_cv2np(img):
     img_arr = np.ascontiguousarray(img).astype(np.float32)
-    if bgr2rgb:
-        img_arr = img_arr.transpose(2, 0, 1)
     img_arr /= 255
     return img_arr
 

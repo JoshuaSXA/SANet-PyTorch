@@ -19,6 +19,8 @@ def img_padding(img_arr, gt_arr):
     padding_right = target_size - padding_left - w
     img_arr = np.pad(img_arr, ((padding_top, padding_bottom), (padding_left, padding_right), (0,0)), 'constant', constant_values=0)
     gt_arr = np.pad(gt_arr, ((padding_top, padding_bottom), (padding_left, padding_right), (0,0)), 'constant', constant_values=0)
+    img_arr = img_arr.transpose(2, 0, 1)
+    gt_arr = gt_arr.transpose(2, 0, 1)
     return img_arr, gt_arr
 
 
@@ -40,4 +42,8 @@ class MyDataset(Dataset):
         img_arr, gt_arr = img_padding(img_arr, gt_arr)
         return torch.from_numpy(img_arr), torch.from_numpy(gt_arr)
 
-
+# img_file_path = os.path.join('StoneData', 'images')
+# gt_file_path = os.path.join('StoneData', 'ground_truth')
+# dataset = MyDataset(img_file_path, gt_file_path)
+# for (img, gt) in dataset:
+#     print(img.shape, gt.shape)

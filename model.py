@@ -65,22 +65,22 @@ class SANet(nn.Module):
         self.fme_module = nn.Sequential(
             SAModule(3, 16, middleLayer=False),
             nn.MaxPool2d(kernel_size=2,stride=2),
-            SAModule(16, 32, middleLayer=True),
+            SAModule(16 * 4, 32, middleLayer=True),
             nn.MaxPool2d(kernel_size=2, stride=2),
-            SAModule(32, 32, middleLayer=True),
+            SAModule(32 * 4, 32, middleLayer=True),
             nn.MaxPool2d(kernel_size=2, stride=2),
-            SAModule(32, 16, middleLayer=True)
+            SAModule(32 * 4, 16, middleLayer=True)
         )
 
         self.dme_module = nn.Sequential(
-            Conv2d(16, 64, 9, padding=4, In=True),
+            Conv2d(64, 64, 9, padding=4, In=True),
             nn.ConvTranspose2d(64, 64, kernel_size=2, stride=2),
             Conv2d(64, 32, 7, padding=3, In=True),
             nn.ConvTranspose2d(32, 32, kernel_size=2, stride=2),
             Conv2d(32, 16, 5, padding=2, In=True),
             nn.ConvTranspose2d(16, 16, kernel_size=2, stride=2),
-            Conv2d(16, 16, 3, padding=2, In=True),
-            Conv2d(16, 16, 5, padding=3, In=True)
+            Conv2d(16, 16, 3, padding=1, In=True),
+            Conv2d(16, 16, 5, padding=2, In=True)
         )
 
         self.out_layer = Conv2d(16,1,1,padding=0)
