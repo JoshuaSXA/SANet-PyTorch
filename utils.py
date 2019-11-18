@@ -7,14 +7,12 @@ from torch.autograd import Variable
 
 
 def gaussian_filter(channel_size, kernel_size, sigma):
-    # gaussian_map = torch.Tensor(math.exp())
     gauss_1D = torch.Tensor([math.exp(-(x - kernel_size // 2) ** 2 / float(2 * sigma ** 2)) for x in range(kernel_size)])
     gauss_1D /= gauss_1D.sum()
     gauss_1D = gauss_1D.unsqueeze(1)
     gauss_2D = gauss_1D.mm(gauss_1D.t()).float().unsqueeze(0).unsqueeze(0)
     gauss_filter = Variable(gauss_2D.expand(channel_size, 1, kernel_size, kernel_size).contiguous())
     return gauss_filter
-
 
 
 def ssim_index(pred, g_t, gauss_filter, kernel_size=11):
@@ -40,6 +38,8 @@ class SSIM_Loss(nn.Module):
     def forward(self, pred, g_t):
         self.gauss_filter = self.gauss_filter.cuda(pred.get_device()) if pred.is_cuda else self.gauss_filter
         self.gauss_filter = self.gauss_filter.type_as(pred) if not self.gauss_filter.type() == pred.data.type() else self.gauss_filter
-        return torch.mean((pred - g_t)**2) + 1 - ssim_index(pred, g_t, self.gauss_filter, self.kernel_size)
+        mse_loss = torch.mean((pred - g_t)**2, dim=(0, 1, 2, 3))
+        ssim_loss = 1 - ssim_index(pred, g_t, self.gauss_filter, self.kernel_size)
+        return torch.mul(torch.add(torch.mul(ssim_loss, 0.001), mse_loss), pred.shape[2] * pred.shape[3])
 
 

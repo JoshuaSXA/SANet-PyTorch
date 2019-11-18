@@ -5,7 +5,6 @@ import shutil
 import warnings
 from model import SANet
 from utils import SSIM_Loss
-from metrics import SANetLoss
 from data import MyDataset
 
 import numpy as np
@@ -24,8 +23,8 @@ def main():
     train_loader = DataLoader(MyDataset(train_img_file_path, train_gt_file_path), batch_size=1, shuffle=True, num_workers=4)
     val_loader = DataLoader(MyDataset(val_img_file_path, val_gt_file_path), batch_size=1, num_workers=4)
     # criterion = nn.MSELoss(size_average=False).cuda() if torch.cuda.is_available() else nn.MSELoss(size_average=False)
-    # criterion = SSIM_Loss().cuda() if torch.cuda.is_available() else SSIM_Loss()
-    criterion = SANetLoss(1).cuda() if torch.cuda.is_available() else SANetLoss(1)
+    criterion = SSIM_Loss().cuda() if torch.cuda.is_available() else SSIM_Loss()
+    # criterion = SANetLoss(1).cuda() if torch.cuda.is_available() else SANetLoss(1)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     for i in range(10):
         train(model, train_loader, criterion, optimizer, i + 1)
