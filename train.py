@@ -17,18 +17,25 @@ from torch.utils.data import DataLoader
 def main():
     model = SANet().cuda() if torch.cuda.is_available() else SANet()
     weights_normal_init(model)
-    img_file_path = os.path.join('StoneData', 'images')
-    gt_file_path = os.path.join('StoneData', 'ground_truth')
-    train_loader = DataLoader(MyDataset(img_file_path, gt_file_path), batch_size=1, shuffle=True, num_workers=4)
-    criterion = nn.MSELoss(size_average=False).cuda() if torch.cuda.is_available() else nn.MSELoss(size_average=False)
+    train_img_file_path = os.path.join('StoneData', 'train', 'images')
+    train_gt_file_path = os.path.join('StoneData', 'train', 'ground_truth')
+    val_img_file_path = os.path.join('StoneData', 'val', 'images')
+    val_gt_file_path = os.path.join('StoneData', 'val', 'ground_truth')
+    train_loader = DataLoader(MyDataset(train_img_file_path, train_gt_file_path), batch_size=1, shuffle=True, num_workers=4)
+    val_loader = DataLoader(MyDataset(val_img_file_path, val_gt_file_path), batch_size=1, num_workers=4)
+    # criterion = nn.MSELoss().cuda() if torch.cuda.is_available() else nn.MSELoss()
+    criterion = SSIM_Loss().cuda() if torch.cuda.is_available() else SSIM_Loss()
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)
-    train(model, train_loader, criterion, optimizer, 0)
+    for i in range(10):
+        train(model, train_loader, criterion, optimizer, i + 1)
+        validate(model, val_loader, criterion)
 
 def train(model, train_loader, criterion, optimizer, epoch):
     cuda_stat = torch.cuda.is_available()
     step_num = 0
     total_loss = 0.0
     step_loss = 0.0
+    model.train()
     for i, (img, gt) in enumerate(train_loader):
         img = Variable(img.cuda()) if cuda_stat else Variable(img)
         gt = Variable(gt.cuda()) if cuda_stat else Variable(gt)
@@ -42,6 +49,23 @@ def train(model, train_loader, criterion, optimizer, epoch):
         step_num = step_num + 1
         print("Epoch %d: step %d ends. loss is %.4f" % (epoch, step_num, step_loss))
     print("Epoch %d ended: average loss is %.4f" % (epoch, total_loss / step_num))
+
+
+
+def validate(model, val_loader, criterion):
+    cuda_stat = torch.cuda.is_available()
+    total_loss = 0.0
+    total_step = 0
+    model.eval()
+    for i, (img, gt) in enumerate(val_loader):
+        img = Variable(img.cuda()) if cuda_stat else Variable(img)
+        gt = Variable(gt.cuda()) if cuda_stat else Variable(gt)
+        with torch.no_grad():
+            out_put = model(img)
+        loss = criterion(out_put, gt)
+        total_loss += loss.item()
+        total_step += 1
+    return total_loss / total_step
 
 
 
