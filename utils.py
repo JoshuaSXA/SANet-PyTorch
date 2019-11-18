@@ -43,13 +43,3 @@ class SSIM_Loss(nn.Module):
         return torch.mean((pred - g_t)**2) + 1 - ssim_index(pred, g_t, self.gauss_filter, self.kernel_size)
 
 
-# weights initialization
-def weights_normal_init(model):
-    for m in model.modules():
-        if isinstance(m, nn.Conv2d):
-            nn.init.normal_(m.weight, std=0.01)
-            if m.bias is not None:
-                nn.init.constant_(m.bias, 0)
-        elif isinstance(m, nn.BatchNorm2d):
-            nn.init.constant_(m.weight, 1)
-            nn.init.constant_(m.bias, 0)
